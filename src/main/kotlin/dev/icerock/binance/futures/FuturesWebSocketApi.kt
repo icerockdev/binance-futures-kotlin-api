@@ -87,7 +87,7 @@ open class FuturesWebSocketApi(
             }
             val keepAliveTask = async {
                 while (isActive) {
-                    delay(10.minutes)
+                    delay(KEEP_ALIVE_PERIOD_MINUTES.minutes)
 
                     restApi.keepAliveUserDataStream(listenKey)
                 }
@@ -101,5 +101,9 @@ open class FuturesWebSocketApi(
             scope = socketScope,
             started = SharingStarted.Eagerly
         )
+    }
+
+    private companion object {
+        const val KEEP_ALIVE_PERIOD_MINUTES = 10
     }
 }
