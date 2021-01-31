@@ -2,18 +2,18 @@
  * Copyright 2021 IceRock MAG Inc. Use of this source code is governed by the Apache 2.0 license.
  */
 
-package dev.icerock.binance
+package dev.icerock.binance.futures
 
-import dev.icerock.binance.model.AccountInfo
-import dev.icerock.binance.model.ListenKey
-import dev.icerock.binance.model.NewOrder
-import dev.icerock.binance.model.NewOrderResponseType
-import dev.icerock.binance.model.OpenOrder
-import dev.icerock.binance.model.OrderSide
-import dev.icerock.binance.model.OrderType
-import dev.icerock.binance.model.TimeInForce
-import dev.icerock.binance.model.WorkingType
-import dev.icerock.binance.security.signHmacSHA256
+import dev.icerock.binance.futures.model.AccountInfo
+import dev.icerock.binance.futures.model.ListenKey
+import dev.icerock.binance.futures.model.NewOrder
+import dev.icerock.binance.futures.model.NewOrderResponseType
+import dev.icerock.binance.futures.model.OpenOrder
+import dev.icerock.binance.futures.model.OrderSide
+import dev.icerock.binance.futures.model.OrderType
+import dev.icerock.binance.futures.model.TimeInForce
+import dev.icerock.binance.futures.model.WorkingType
+import dev.icerock.binance.futures.security.signHmacSHA256
 import io.ktor.client.HttpClient
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.delete

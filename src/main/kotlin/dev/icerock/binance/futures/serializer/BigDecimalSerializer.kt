@@ -2,7 +2,7 @@
  * Copyright 2021 IceRock MAG Inc. Use of this source code is governed by the Apache 2.0 license.
  */
 
-package dev.icerock.binance.serializer
+package dev.icerock.binance.futures.serializer
 
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -18,7 +18,7 @@ import java.math.BigDecimal
 @Serializer(forClass = BigDecimal::class)
 object BigDecimalSerializer : KSerializer<BigDecimal> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor(
-        serialName = "dev.icerock.binance.serializer.BigDecimalSerializer",
+        serialName = "dev.icerock.binance.futures.serializer.BigDecimalSerializer",
         kind = PrimitiveKind.DOUBLE
     )
 

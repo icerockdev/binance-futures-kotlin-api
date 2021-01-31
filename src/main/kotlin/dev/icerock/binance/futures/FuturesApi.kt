@@ -2,7 +2,7 @@
  * Copyright 2021 IceRock MAG Inc. Use of this source code is governed by the Apache 2.0 license.
  */
 
-package dev.icerock.binance
+package dev.icerock.binance.futures
 
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp

@@ -4,9 +4,9 @@
 
 @file:UseSerializers(BigDecimalSerializer::class)
 
-package dev.icerock.binance.model
+package dev.icerock.binance.futures.model
 
-import dev.icerock.binance.serializer.BigDecimalSerializer
+import dev.icerock.binance.futures.serializer.BigDecimalSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers

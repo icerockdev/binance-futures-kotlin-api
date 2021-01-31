@@ -2,7 +2,7 @@
  * Copyright 2021 IceRock MAG Inc. Use of this source code is governed by the Apache 2.0 license.
  */
 
-package dev.icerock.binance.security
+package dev.icerock.binance.futures.security
 
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
