@@ -22,4 +22,10 @@ data class AccountInfo(
     @SerialName("maxWithdrawAmount")
     val maxWithdrawAmountUSDT: BigDecimal,
     val positions: List<Position>
-)
+) {
+    fun getOpenedPosition(symbol: String): Position? {
+        return positions
+            .firstOrNull { it.symbol == symbol }
+            ?.takeIf { it.entryPrice.compareTo(BigDecimal.ZERO) != 0 }
+    }
+}
