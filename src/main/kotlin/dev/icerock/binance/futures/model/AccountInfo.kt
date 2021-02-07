@@ -26,6 +26,6 @@ data class AccountInfo(
     fun getOpenedPosition(symbol: String): Position? {
         return positions
             .firstOrNull { it.symbol == symbol }
-            ?.takeIf { it.entryPrice.compareTo(BigDecimal.ZERO) != 0 }
+            ?.takeIf { it.initialMargin != BigDecimal.ZERO }
     }
 }
