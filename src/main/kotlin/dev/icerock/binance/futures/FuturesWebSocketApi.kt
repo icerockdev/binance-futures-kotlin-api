@@ -18,13 +18,13 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.channels.sendBlocking
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.isActive
 import kotlinx.serialization.json.Json
-import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
 import kotlin.time.minutes
 import kotlin.time.seconds
@@ -41,6 +41,8 @@ open class FuturesWebSocketApi(
     }
 
     protected val userDataStream: Flow<String> by lazy(::createUserDataStream)
+    private val _socketReconnectedEvent = MutableSharedFlow<Unit>()
+    val socketReconnectedEvent: Flow<Unit> = _socketReconnectedEvent
 
     fun listenOrderTradeUpdateStream(): Flow<UserUpdateEvent.OrderUpdate> {
         return userDataStream
@@ -77,29 +79,37 @@ open class FuturesWebSocketApi(
     @OptIn(ExperimentalTime::class, ExperimentalCoroutinesApi::class)
     private suspend fun startSocket(
         listenKey: String,
-        producerScope: ProducerScope<String>,
-        delayDuration: Duration? = null
+        coroutineScope: CoroutineScope,
+        producerScope: ProducerScope<String>
     ) {
-        try {
-            httpClient.wss(wsCall(listenKey)) {
-                while (isActive) {
-                    val frame = incoming.receive()
+        var reconnectTimes = 0
+        while (coroutineScope.isActive) {
+            try {
+                httpClient.wss(wsCall(listenKey)) {
+                    if (reconnectTimes > 0) {
+                        reconnectTimes = 0
+                        // todo need to fire notification about it - maybe we lost some events and need to create new position
+                        println("reconnected!")
+                        _socketReconnectedEvent.emit(Unit)
+                    }
 
-                    if (frame is Frame.Text) {
-                        producerScope.sendBlocking(frame.readText())
+                    while (this.isActive) {
+                        val frame = incoming.receive()
+
+                        if (frame is Frame.Text) {
+                            producerScope.sendBlocking(frame.readText())
+                        }
                     }
                 }
+            } catch (t: Throwable) {
+                if (t is CancellationException) break
+
+                t.printStackTrace()
+
+                reconnectTimes++
+                val delaySeconds = minOf(2.seconds.times(reconnectTimes), 16.seconds)
+                delay(delaySeconds)
             }
-        } catch (t: Throwable) {
-            if (t is CancellationException) return
-
-            t.printStackTrace()
-
-            delayDuration?.let { delay(it) }
-
-            val newDelay = delayDuration?.times(2) ?: 1.seconds
-
-            startSocket(listenKey, producerScope, minOf(newDelay, 16.seconds))
         }
     }
 
@@ -109,7 +119,7 @@ open class FuturesWebSocketApi(
             val listenKey = restApi.startUserDataStream()
 
             val wsTask = async {
-                startSocket(listenKey, this@callbackFlow)
+                startSocket(listenKey, this, this@callbackFlow)
             }
             val keepAliveTask = async {
                 while (isActive) {
