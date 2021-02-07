@@ -9,9 +9,11 @@ import io.ktor.client.HttpClient
 import io.ktor.client.features.websocket.wss
 import io.ktor.http.cio.websocket.Frame
 import io.ktor.http.cio.websocket.readText
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
+import kotlinx.coroutines.channels.ProducerScope
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.channels.sendBlocking
 import kotlinx.coroutines.delay
@@ -22,8 +24,10 @@ import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.isActive
 import kotlinx.serialization.json.Json
+import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
 import kotlin.time.minutes
+import kotlin.time.seconds
 
 open class FuturesWebSocketApi(
     private val socketScope: CoroutineScope,
@@ -71,19 +75,41 @@ open class FuturesWebSocketApi(
     }
 
     @OptIn(ExperimentalTime::class, ExperimentalCoroutinesApi::class)
+    private suspend fun startSocket(
+        listenKey: String,
+        producerScope: ProducerScope<String>,
+        delayDuration: Duration? = null
+    ) {
+        try {
+            httpClient.wss(wsCall(listenKey)) {
+                while (isActive) {
+                    val frame = incoming.receive()
+
+                    if (frame is Frame.Text) {
+                        producerScope.sendBlocking(frame.readText())
+                    }
+                }
+            }
+        } catch (t: Throwable) {
+            if (t is CancellationException) return
+
+            t.printStackTrace()
+
+            delayDuration?.let { delay(it) }
+
+            val newDelay = delayDuration?.times(2) ?: 1.seconds
+
+            startSocket(listenKey, producerScope, minOf(newDelay, 16.seconds))
+        }
+    }
+
+    @OptIn(ExperimentalTime::class, ExperimentalCoroutinesApi::class)
     private fun createUserDataStream(): Flow<String> {
-        return callbackFlow {
+        return callbackFlow<String> {
             val listenKey = restApi.startUserDataStream()
 
             val wsTask = async {
-                httpClient.wss(wsCall(listenKey)) {
-                    while (isActive) {
-                        val frame = incoming.receive()
-                        if (frame is Frame.Text) {
-                            sendBlocking(frame.readText())
-                        }
-                    }
-                }
+                startSocket(listenKey, this@callbackFlow)
             }
             val keepAliveTask = async {
                 while (isActive) {

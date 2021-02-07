@@ -22,14 +22,12 @@ import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.put
-import kotlinx.serialization.json.Json
 import java.math.BigDecimal
 
 open class FuturesRestApi(
     private val apiKey: String,
     private val secretKey: String,
     private val restEndpoint: String,
-    private val json: Json,
     private val httpClient: HttpClient
 ) {
     protected open fun restCall(method: String, version: String = "v1"): String {

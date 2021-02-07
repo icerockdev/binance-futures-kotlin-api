@@ -15,6 +15,7 @@ import io.ktor.client.features.logging.SIMPLE
 import io.ktor.client.features.websocket.WebSockets
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.json.Json
+import java.time.Duration
 
 open class FuturesApi(
     private val apiKey: String,
@@ -30,7 +31,14 @@ open class FuturesApi(
     protected open val json: Json = Json {
         ignoreUnknownKeys = true
     }
+
     protected open val httpClient: HttpClient = HttpClient(OkHttp) {
+        engine {
+            config {
+                pingInterval(Duration.ofSeconds(5))
+            }
+        }
+
         install(WebSockets)
         install(JsonFeature) {
             serializer = KotlinxSerializer(json)
@@ -43,7 +51,6 @@ open class FuturesApi(
             apiKey = apiKey,
             secretKey = secretKey,
             restEndpoint = restEndpoint,
-            json = json,
             httpClient = httpClient
         )
     }
