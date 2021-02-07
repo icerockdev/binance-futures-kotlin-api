@@ -88,8 +88,7 @@ open class FuturesWebSocketApi(
                 httpClient.wss(wsCall(listenKey)) {
                     if (reconnectTimes > 0) {
                         reconnectTimes = 0
-                        // todo need to fire notification about it - maybe we lost some events and need to create new position
-                        println("reconnected!")
+                        println("reconnected send!")
                         _socketReconnectedEvent.emit(Unit)
                     }
 
