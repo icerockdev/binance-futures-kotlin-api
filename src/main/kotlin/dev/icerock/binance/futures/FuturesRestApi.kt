@@ -11,6 +11,7 @@ import dev.icerock.binance.futures.model.NewOrderResponseType
 import dev.icerock.binance.futures.model.OpenOrder
 import dev.icerock.binance.futures.model.OrderSide
 import dev.icerock.binance.futures.model.OrderType
+import dev.icerock.binance.futures.model.Position
 import dev.icerock.binance.futures.model.TimeInForce
 import dev.icerock.binance.futures.model.WorkingType
 import dev.icerock.binance.futures.security.signHmacSHA256
@@ -50,6 +51,15 @@ open class FuturesRestApi(
 
     suspend fun getAccountInfo(): AccountInfo {
         return httpClient.get(restCall("account", version = "v2")) {
+            parameter("timestamp", System.currentTimeMillis())
+            passApiKey()
+            passQuerySignature()
+        }
+    }
+
+    suspend fun getPositionInfo(symbol: String? = null): List<Position> {
+        return httpClient.get(restCall("positionRisk", version = "v2")) {
+            if (symbol != null)  parameter("symbol", symbol)
             parameter("timestamp", System.currentTimeMillis())
             passApiKey()
             passQuerySignature()
